@@ -7,8 +7,9 @@
 
     allow(ip){
         if(!this.storage.has(ip)){
-            let user =  this.createWindow(ip);
-            return this.consumeRequest(user);
+            const user =  this.createWindow(ip);
+             this.consumeRequest(user);
+             return true;
         }
 
         const user = this.storage.get(ip); 
@@ -16,8 +17,9 @@
 
 
         if(this.isWindowExpired(user)){
-           let user =  this.resetWindow(ip);
-           return this.consumeRequest(user);
+           const user =  this.resetWindow(ip);
+           this.consumeRequest(user);
+           return true;
         }
 
         if(!this.isRequestAllowed(user)){
@@ -26,7 +28,9 @@
 
   
 
-        return this.consumeRequest(user);
+        this.consumeRequest(user);
+
+        return true;
 
 
     }
@@ -41,9 +45,7 @@
     }
 
     consumeRequest(user) {
-        console.log("Consumeer", user);
         user.remainingRequests--;
-        return true;
     }
 
     isWindowExpired(user) {
