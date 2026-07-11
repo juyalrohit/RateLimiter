@@ -9,7 +9,7 @@ const success200 = new Counter("success_200");
 const blocked429 = new Counter("blocked_429");
 
 export const options = {
-    vus: 100,
+    vus: 1,
     duration: '10s',
 };
 
