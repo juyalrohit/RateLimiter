@@ -28,6 +28,7 @@ export default class SlidingWindowRateLimiter {
         score: timeStamp,
         value: `${timeStamp}-${Math.random()}`,
     });
+    await redis.expire(key, Math.ceil(this.windowSize / 1000) + 1);
 
     return {
         allowed: true,
