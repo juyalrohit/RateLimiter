@@ -2,6 +2,7 @@ import FixedWindowRateLimiter from "../rateLimiter/FixedWindowRateLimiter.js";
 import FixedWindowRedisRateLimiter from "../rateLimiter/FixedWindowRedisRateLimiter.js";
 import SlidingWindowRateLimiter from "../rateLimiter/SlidingWindowRateLimiter.js";
 import MemoryStorage from "../rateLimiter/storage.js";
+import TokenBucketRateLimiter from "../rateLimiter/TokenBucketRateLimiter.js";
 
   const storage = new MemoryStorage();
 
@@ -9,7 +10,9 @@ import MemoryStorage from "../rateLimiter/storage.js";
 
 //   const rateLimiter = new FixedWindowRedisRateLimiter(10, 10);
 
-const rateLimiter = new SlidingWindowRateLimiter(10 * 1000, 10);
+// const rateLimiter = new SlidingWindowRateLimiter(10 * 1000, 10);
+
+const rateLimiter = new TokenBucketRateLimiter(10*1000, 10);
 
 
 // export async function rateLimiterMiddleware(req, res, next){

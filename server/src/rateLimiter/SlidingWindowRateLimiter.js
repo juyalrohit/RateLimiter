@@ -8,32 +8,61 @@ export default class SlidingWindowRateLimiter {
 
     async allow(userId) {
     const timeStamp = Date.now();
-    const key = `RateLimiter:${userId}`;
+    const key = `rl:${userId}`;
+
+    const script = `
+        local key = KEYS[1]
+        local minAllowed = tonumber(ARGV[1])
+        local limit = tonumber(ARGV[2])
+        local timestamp = tonumber(ARGV[3])
+        local member = ARGV[4]
+        local ttl = tonumber(ARGV[5])
+
+        redis.call("ZREMRANGEBYSCORE", key, "-inf", minAllowed)
+
+        local current = redis.call("ZCARD", key)
+        
+        if current >= limit then
+            return {
+                0,
+                current
+            }
+        end
+
+        redis.call("ZADD", key, timestamp, member)
+        redis.call("EXPIRE", key, ttl)
+
+        return {
+            1,
+            current + 1
+        }
+
+    `;
+
+
 
     const minAllowed = timeStamp - this.windowSize;
 
-    await redis.zRemRangeByScore(key, "-inf", minAllowed);
-
-    const current = await redis.zCard(key);
-
-    if (current >= this.limit) {
-        return {
-            allowed: false,
-            limit: this.limit,
-            remaining: 0,
-        };
-    }
-
-    await redis.zAdd(key, {
-        score: timeStamp,
-        value: `${timeStamp}-${Math.random()}`,
+        const result = await redis.eval(script, {
+        keys: [key],
+        arguments: [
+            minAllowed.toString(),
+            this.limit.toString(),
+            timeStamp.toString(),
+            `${timeStamp}-${randomUUID()}`,
+            Math.ceil(this.windowSize / 1000 + 1).toString()
+        ]
     });
-    await redis.expire(key, Math.ceil(this.windowSize / 1000) + 1);
+
+
+    const [allowed, current ] = result;
+
+
 
     return {
-        allowed: true,
+        allowed: allowed === 1,
         limit: this.limit,
-        remaining: this.limit - current - 1,
+        remaining: Math.max(0, this.limit - current),
     };
 }
 }
